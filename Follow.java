@@ -15,6 +15,7 @@ public class Follow {
         Class.forName("org.sqlite.JDBC");
         Connection conn = DriverManager.getConnection("jdbc:sqlite:database.db");
 
+        // Simpan ke tabel follows di SQLite
         String sql = "INSERT INTO follows (email, email_to_follow, follow_created) VALUES (?, ?, datetime('now'))";
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setString(1, emailFollower);
@@ -26,9 +27,13 @@ public class Follow {
         // Koneksi ke Redis
         Jedis jedis = new Jedis("redis://localhost:6379");
 
-        // Simpan daftar following di Redis (gunakan key berbasis email)
-        String redisKey = "following:" + emailFollower;
-        jedis.sadd(redisKey, emailToFollow);
+        // Simpan daftar following (siapa yang diikuti oleh emailFollower)
+        String followingKey = "following:" + emailFollower;
+        jedis.sadd(followingKey, emailToFollow);
+
+        // Simpan daftar followers (siapa yang mengikuti emailToFollow)
+        String followersKey = "followers:" + emailToFollow;
+        jedis.sadd(followersKey, emailFollower);
 
         jedis.close();
 
